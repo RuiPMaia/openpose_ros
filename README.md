@@ -100,5 +100,3 @@ $ roslaunch openpose_ros_node videostream.launch video:=${filepath} video_visual
 ### USB Camera Example
 
 See [/launch/videostream](https://github.com/ildoonet/ros-openpose/blob/master/openpose_ros_node/launch/videostream.launch).
-# openpose_ros
-# openpose_ros

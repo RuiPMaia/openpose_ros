@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package>
+<name>openpose_ros_bbox</name>
+  <version>0.0.1</version>
+  <description>The openpose_ros_bbox package</description>
+
+  <maintainer email="vizzy@todo.todo">vizzy</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>cv_bridge</build_depend>
+  <build_depend>image_transport</build_depend>
+  <build_depend>openpose_ros_msgs</build_depend>
+  <build_depend>message_filters</build_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>image_transport</run_depend>
+</package>

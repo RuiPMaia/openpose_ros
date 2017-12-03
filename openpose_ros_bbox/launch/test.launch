@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+   <arg name="image_src" default="/openpose/image_skeleton_left" />
+
+    <node name="openpose_ros_bbox" pkg="openpose_ros_bbox" type="openpose_ros_bbox" output="screen" required="true">
+        <param name="image_src" value="$(arg image_src)" />
+        <param name="result_image_topic" value="/openposebbox/image_raw" />
+        <param name="image_transport" value="raw" />
+        <param name="keypoints_threshold" value="0.4" />
+    </node>
+
+    <node name="image_view_bbox" pkg="image_view" type="image_view" respawn="false" output="screen" required="true">
+        <remap from="image" to="/openposebbox/image_raw"/>
+        <param name="autosize" value="true" />
+    </node>
+
+</launch>

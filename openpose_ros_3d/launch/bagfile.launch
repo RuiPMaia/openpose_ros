@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<launch>
+   <arg name="topic" default="/camera/rgb/image_raw" />
+   <arg name="video_width" default="640" />
+   <arg name="video_height" default="480" />
+
+    <node name="openpose_ros_node" pkg="openpose_ros_node" type="openpose_ros_node" output="screen" required="true">
+        <param name="camera" value="$(arg topic)" />
+        <param name="result_image_topic" value="/openpose/image_raw" />
+        <param name="resolution" value="$(arg video_width)x$(arg video_height)" />
+        <param name="face" value="false" />
+    </node>
+
+    <node name="image_view" pkg="image_view" type="image_view" respawn="false" output="screen" required="true">
+        <remap from="image" to="/openpose/image_raw"/>
+        <param name="autosize" value="true" />
+    </node>
+
+</launch>
