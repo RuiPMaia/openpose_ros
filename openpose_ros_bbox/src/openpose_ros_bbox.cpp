@@ -38,7 +38,7 @@ openpose_ros_msgs::BoundingBox calculatePartMask(std::vector<openpose_ros_msgs::
 	int maxY = bodyParts[maskPoints[0]].y;
 	for(int i = 1; i < maskPoints.size(); i++){
 		int idx = maskPoints[i];
-		if(bodyParts[idx].confidence < keypoints_threshold) continue;
+		if(bodyParts[idx].confidence == 0) continue;
 		if(bodyParts[idx].x > maxX) maxX = bodyParts[idx].x;
 		if(bodyParts[idx].x < minX) minX = bodyParts[idx].x;
 		if(bodyParts[idx].y > maxY) maxY = bodyParts[idx].y;
@@ -117,7 +117,10 @@ public:
 			bbPerson.partMasks.push_back(calculatePartMask(person.body_part, torsoPoints));
 			bbPerson.partMasks.push_back(calculatePartMask(person.body_part, legPoints));
 			bbPerson.partMasks.push_back(calculatePartMask(person.body_part, feetPoints));
-
+			//adjustments to the masks
+			int dist = person.body_part[1].y - person.body_part[0].y; //vertical distance from nose to neck
+			bbPerson.partMasks[0].height += dist/2; //adjust head mask
+			bbPerson.partMasks[3].height *= 1.5; //adjust feet mask
 			//average torso length
 			int ref = (person.body_part[8].y+person.body_part[11].y)/2-person.body_part[1].y;
 			bbPerson.bbox.x = minX - ref*0.15;
@@ -128,8 +131,8 @@ public:
 			cv::rectangle(cv_ptr->image, cv::Rect(bbPerson.bbox.x, bbPerson.bbox.y, bbPerson.bbox.width, bbPerson.bbox.height), cv::Scalar(0, 255, 0));
 			cv::rectangle(cv_ptr->image, cv::Rect(bbPerson.partMasks[0].x, bbPerson.partMasks[0].y, bbPerson.partMasks[0].width, bbPerson.partMasks[0].height), cv::Scalar(255, 0, 0));
 			cv::rectangle(cv_ptr->image, cv::Rect(bbPerson.partMasks[1].x, bbPerson.partMasks[1].y, bbPerson.partMasks[1].width, bbPerson.partMasks[1].height), cv::Scalar(255, 0, 0));
-			cv::rectangle(cv_ptr->image, cv::Rect(bbPerson.partMasks[1].x, bbPerson.partMasks[2].y, bbPerson.partMasks[2].width, bbPerson.partMasks[2].height), cv::Scalar(255, 0, 0));
-			cv::rectangle(cv_ptr->image, cv::Rect(bbPerson.partMasks[1].x, bbPerson.partMasks[3].y, bbPerson.partMasks[3].width, bbPerson.partMasks[3].height), cv::Scalar(255, 0, 0));
+			cv::rectangle(cv_ptr->image, cv::Rect(bbPerson.partMasks[2].x, bbPerson.partMasks[2].y, bbPerson.partMasks[2].width, bbPerson.partMasks[2].height), cv::Scalar(255, 0, 0));
+			cv::rectangle(cv_ptr->image, cv::Rect(bbPerson.partMasks[3].x, bbPerson.partMasks[3].y, bbPerson.partMasks[3].width, bbPerson.partMasks[3].height), cv::Scalar(255, 0, 0));
 		}
 
 		bbox_pub.publish(bbList);

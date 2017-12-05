@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-   <arg name="image_topic" default="/vizzy/r_camera/image_rect_color" />
+   <arg name="image_topic" default="/vizzy/r_camera/image_rect_color"/>
    <arg name="video_width" default="640" />
    <arg name="video_height" default="480" />
 
