@@ -11,6 +11,7 @@
 #include <openpose_ros_msgs/BodyPartDetection.h>
 #include <openpose_ros_msgs/PersonDetection.h>
 #include <openpose_ros_msgs/BoundingBox.h>
+#include <openpose_ros_msgs/BBPerson.h>
 #include <openpose_ros_msgs/BBList.h>
 
 #include <message_filters/subscriber.h>
@@ -20,8 +21,35 @@
 
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, openpose_ros_msgs::Persons> MySyncPolicy;
 
+const std::vector<int> headPoints = {0, 14, 15, 16, 17};
+const std::vector<int> torsoPoints = {1, 8, 11};
+const std::vector<int> legPoints = {8, 9, 11, 12};
+const std::vector<int> feetPoints = {9, 10, 12, 13};
+
 std::string image_src, result_image_topic;
 double keypoints_threshold;
+
+openpose_ros_msgs::BoundingBox calculatePartMask(std::vector<openpose_ros_msgs::BodyPartDetection> bodyParts, const std::vector<int> maskPoints)
+{
+	openpose_ros_msgs::BoundingBox box;
+	int minX = bodyParts[maskPoints[0]].x;
+	int maxX = bodyParts[maskPoints[0]].x;
+	int minY = bodyParts[maskPoints[0]].y;
+	int maxY = bodyParts[maskPoints[0]].y;
+	for(int i = 1; i < maskPoints.size(); i++){
+		int idx = maskPoints[i];
+		if(bodyParts[idx].confidence < keypoints_threshold) continue;
+		if(bodyParts[idx].x > maxX) maxX = bodyParts[idx].x;
+		if(bodyParts[idx].x < minX) minX = bodyParts[idx].x;
+		if(bodyParts[idx].y > maxY) maxY = bodyParts[idx].y;
+		if(bodyParts[idx].y < minY) minY = bodyParts[idx].y;
+	}
+	box.x = minX;
+	box.y = minY;
+	box.width = maxX-minX;
+	box.height = maxY-minY;
+	return box;
+}
 
 class bboxCreator
 {
@@ -56,7 +84,7 @@ public:
 		}
 	 	if (cv_ptr->image.empty()) return;
 
-		openpose_ros_msgs::BBList boxList;
+		openpose_ros_msgs::BBList bbList;
 
 		for(int i = 0; i < keypoints2d_msg->persons.size(); i++){
 			openpose_ros_msgs::PersonDetection person = keypoints2d_msg->persons[i];
@@ -64,10 +92,10 @@ public:
 			if(person.body_part[1].confidence < keypoints_threshold || person.body_part[8].confidence < keypoints_threshold ||
 				person.body_part[11].confidence < keypoints_threshold) continue;
 
-			//consider only keypoints above a certain threshold and ignore arms
+			//consider only keypoints above a certain threshold
 			std::vector<openpose_ros_msgs::BodyPartDetection> bodyParts;
 			for(int j = 0; j < person.body_part.size(); j++){
-				if(person.body_part[j].confidence >= keypoints_threshold && j != 3 && j != 4 && j != 6 && j != 7)
+				if(person.body_part[j].confidence >= keypoints_threshold)
 					bodyParts.push_back(person.body_part[j]);
 			}
 			//calculate min and max values for x and y coordinates of the keypoints
@@ -75,26 +103,36 @@ public:
 			int maxX = bodyParts[0].x;
 			int minY = bodyParts[0].y;
 			int maxY = bodyParts[0].y;
-			for(int j = 0; j < bodyParts.size(); j++){
+			for(int j = 1; j < bodyParts.size(); j++){
 				if(bodyParts[j].x > maxX) maxX = bodyParts[j].x;
 				if(bodyParts[j].x < minX) minX = bodyParts[j].x;
 				if(bodyParts[j].y > maxY) maxY = bodyParts[j].y;
 				if(bodyParts[j].y < minY) minY = bodyParts[j].y;
 			}
 			//if height or width are 0 don't create a Bounding box
-			if(maxX-minX == 0 || maxY-minY == 0) continue;
+			//if(maxX-minX == 0 || maxY-minY == 0) continue;
+			openpose_ros_msgs::BBPerson bbPerson;
+			//calculate part masks
+			bbPerson.partMasks.push_back(calculatePartMask(person.body_part, headPoints));
+			bbPerson.partMasks.push_back(calculatePartMask(person.body_part, torsoPoints));
+			bbPerson.partMasks.push_back(calculatePartMask(person.body_part, legPoints));
+			bbPerson.partMasks.push_back(calculatePartMask(person.body_part, feetPoints));
+
 			//average torso length
 			int ref = (person.body_part[8].y+person.body_part[11].y)/2-person.body_part[1].y;
-			openpose_ros_msgs::BoundingBox box;
-			box.x = minX - ref*0.15;
-			box.y = minY - ref*0.25;
-			box.height = maxY + ref*0.35 - box.y ;
-			box.width = maxX + ref*0.15 - box.x;
-			boxList.bbVector.push_back(box);
-			cv::rectangle(cv_ptr->image, cv::Rect(box.x, box.y, box.width, box.height), cv::Scalar(0, 255, 0));
+			bbPerson.bbox.x = minX - ref*0.15;
+			bbPerson.bbox.y = minY - ref*0.25;
+			bbPerson.bbox.width = maxX + ref*0.15 - bbPerson.bbox.x;
+			bbPerson.bbox.height = maxY + ref*0.35 - bbPerson.bbox.y ;
+			bbList.bbPersons.push_back(bbPerson);
+			cv::rectangle(cv_ptr->image, cv::Rect(bbPerson.bbox.x, bbPerson.bbox.y, bbPerson.bbox.width, bbPerson.bbox.height), cv::Scalar(0, 255, 0));
+			cv::rectangle(cv_ptr->image, cv::Rect(bbPerson.partMasks[0].x, bbPerson.partMasks[0].y, bbPerson.partMasks[0].width, bbPerson.partMasks[0].height), cv::Scalar(255, 0, 0));
+			cv::rectangle(cv_ptr->image, cv::Rect(bbPerson.partMasks[1].x, bbPerson.partMasks[1].y, bbPerson.partMasks[1].width, bbPerson.partMasks[1].height), cv::Scalar(255, 0, 0));
+			cv::rectangle(cv_ptr->image, cv::Rect(bbPerson.partMasks[1].x, bbPerson.partMasks[2].y, bbPerson.partMasks[2].width, bbPerson.partMasks[2].height), cv::Scalar(255, 0, 0));
+			cv::rectangle(cv_ptr->image, cv::Rect(bbPerson.partMasks[1].x, bbPerson.partMasks[3].y, bbPerson.partMasks[3].width, bbPerson.partMasks[3].height), cv::Scalar(255, 0, 0));
 		}
 
-		bbox_pub.publish(boxList);
+		bbox_pub.publish(bbList);
 		image_pub.publish(cv_ptr->toImageMsg());
 	}
 };

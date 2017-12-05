@@ -9,8 +9,8 @@
         <param name="camera" value="$(arg video)" />
         <param name="result_image_topic" value="/openpose/image_raw" />
         <param name="resolution" value="$(arg video_width)x$(arg video_height)" />
-        <param name="part_to_show" value="21" />
-        <param name="disable_blending" value="true" />
+        <param name="part_to_show" value="0" />
+        <param name="disable_blending" value="false" />
         <param name="image_transport" value="compressed" />
     </node>
 

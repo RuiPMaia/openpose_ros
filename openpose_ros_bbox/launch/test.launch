@@ -1,11 +1,21 @@
 <?xml version="1.0"?>
 <launch>
-   <arg name="image_src" default="/openpose/image_skeleton_left" />
+   <arg name="image_topic" default="/vizzy/r_camera/image_rect_color" />
+   <arg name="video_width" default="640" />
+   <arg name="video_height" default="480" />
+
+    <node name="openpose_ros_node" pkg="openpose_ros_node" type="openpose_ros_node" output="screen" required="true">
+        <param name="camera" value="$(arg image_topic)" />
+        <param name="result_image_topic" value="/openpose/image_raw" />
+        <param name="resolution" value="$(arg video_width)x$(arg video_height)" />
+        <param name="part_to_show" value="0" />
+        <param name="disable_blending" value="false" />
+        <param name="image_transport" value="compressed" />
+    </node>
 
     <node name="openpose_ros_bbox" pkg="openpose_ros_bbox" type="openpose_ros_bbox" output="screen" required="true">
-        <param name="image_src" value="$(arg image_src)" />
+        <param name="image_src" value="/openpose/image_raw" />
         <param name="result_image_topic" value="/openposebbox/image_raw" />
-        <param name="image_transport" value="raw" />
         <param name="keypoints_threshold" value="0.4" />
     </node>
 

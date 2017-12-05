@@ -350,9 +350,11 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
         // publish result image with annotation.
         sensor_msgs::ImagePtr out_msg;
         if(FLAGS_part_to_show == 21 && FLAGS_disable_blending == true){
-           cv::Mat grayMat;
-           cvtColor(outputImage, grayMat, cv::COLOR_RGB2GRAY);
-           out_msg = cv_bridge::CvImage(msg->header, "mono8", grayMat).toImageMsg();
+           cv::Mat heatMap, mask, dest;
+           cvtColor(outputImage, heatMap, cv::COLOR_RGB2GRAY);
+           cv::threshold(heatMap, mask, 127, 255, cv::THRESH_TOZERO);
+           cv_ptr->image.copyTo(dest, mask);
+           out_msg = cv_bridge::CvImage(msg->header, "bgr8", dest).toImageMsg();
         } else
            out_msg = cv_bridge::CvImage(msg->header, "bgr8", outputImage).toImageMsg();
         publish_result.publish(out_msg);

@@ -1,2 +1,2 @@
 Header header
-BoundingBox[] bbVector
+BBPerson[] bbPersons

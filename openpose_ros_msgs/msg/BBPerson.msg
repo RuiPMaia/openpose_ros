@@ -1,0 +1,2 @@
+BoundingBox bbox
+BoundingBox[] partMasks

@@ -22,6 +22,7 @@ add_message_files(
   Persons_3d.msg
   BoundingBox.msg
   BBList.msg
+  BBPerson.msg
 )
 
 generate_messages(
