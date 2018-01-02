@@ -1,14 +1,35 @@
 <?xml version="1.0"?>
 <launch>
-   <arg name="video" default="0" />
+   <arg name="video" default="webcam/image_raw" />
    <arg name="video_width" default="640" />
    <arg name="video_height" default="480" />
    <arg name="video_visualize" default="false" />
+
+   <include file="$(find video_stream_opencv)/launch/camera.launch" >
+        <!-- node name and ros graph name -->
+        <arg name="camera_name" value="webcam" />
+        <!-- means video device 0, /dev/video0 -->
+        <arg name="video_stream_provider" value="0" />
+        <!-- throttling the querying of frames to -->
+        <arg name="fps" value="30" />
+        <!-- setting frame_id -->
+        <arg name="frame_id" value="webcam" />
+        <!-- camera info loading, take care as it needs the "file:///" at the start , e.g.:
+        "file:///$(find your_camera_package)/config/your_camera.yaml" -->
+        <arg name="camera_info_url" value="" />
+        <!-- flip the image horizontally (mirror it) -->
+        <arg name="flip_horizontal" value="false" />
+        <!-- flip the image vertically -->
+        <arg name="flip_vertical" value="false" />
+        <!-- visualize on an image_view window the stream generated -->
+        <arg name="visualize" value="false" />
+   </include>
 
     <node name="openpose_ros_node" pkg="openpose_ros_node" type="openpose_ros_node" output="screen" required="true">
         <param name="camera" value="$(arg video)" />
         <param name="result_image_topic" value="/openpose/image_raw" />
         <param name="resolution" value="$(arg video_width)x$(arg video_height)" />
+	<param name="net_resolution" value="320x240" />
         <param name="part_to_show" value="0" />
         <param name="disable_blending" value="false" />
         <param name="image_transport" value="compressed" />
