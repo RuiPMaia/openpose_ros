@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+   <arg name="video" default="webcam/image_raw" />
+   <arg name="video_width" default="640" />
+   <arg name="video_height" default="480" />
+   <arg name="video_visualize" default="false" />
+
+    <node name="openpose_ros_node" pkg="openpose_ros_node" type="openpose_ros_node" output="screen" required="true">
+        <param name="camera" value="$(arg video)" />
+        <param name="result_image_topic" value="/openpose/image_raw" />
+        <param name="resolution" value="$(arg video_width)x$(arg video_height)" />
+	<param name="net_resolution" value="320x240" />
+        <param name="part_to_show" value="0" />
+        <param name="disable_blending" value="false" />
+        <param name="image_transport" value="compressed" />
+    </node>
+
+</launch>
